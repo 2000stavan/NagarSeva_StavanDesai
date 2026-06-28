@@ -1,0 +1,159 @@
+@import "tailwindcss";
+
+@import "leaflet/dist/leaflet.css";
+@import "leaflet.markercluster/dist/MarkerCluster.css";
+@import "leaflet.markercluster/dist/MarkerCluster.Default.css";
+
+/* Full-screen portal picker — not inside phone frame */
+.portal-login-page {
+  background: linear-gradient(160deg, #f0fdf4 0%, #f8fafc 40%, #fff7ed 100%);
+  overflow-y: auto;
+}
+
+/* Desktop authority layout — full width, no phone frame */
+.desktop-viewport {
+  width: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+body.desktop-mode {
+  overflow: auto;
+  background: #f1f5f9;
+}
+
+body.desktop-mode #root {
+  height: auto;
+  min-height: 100dvh;
+  overflow: visible;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #cbd5e1;
+  overflow: hidden;
+}
+
+#root {
+  height: 100dvh;
+}
+
+/* iPhone-style frame: 390×844, always fits within viewport */
+.mobile-viewport {
+  height: 100dvh;
+  max-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #94a3b8 0%, #cbd5e1 50%, #e2e8f0 100%);
+  padding: 12px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.mobile-shell {
+  width: min(100%, 390px);
+  height: min(calc(100dvh - 24px), 844px);
+  max-height: calc(100dvh - 24px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #f8fafc;
+  position: relative;
+  box-sizing: border-box;
+}
+
+@media (min-width: 480px) {
+  .mobile-viewport {
+    padding: 16px;
+  }
+
+  .mobile-shell {
+    width: 390px;
+    height: min(844px, calc(100dvh - 32px));
+    max-height: calc(100dvh - 32px);
+    border-radius: 2.75rem;
+    box-shadow:
+      0 25px 50px -12px rgba(0, 0, 0, 0.35),
+      0 0 0 1px rgba(255, 255, 255, 0.1),
+      inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+    border: 5px solid #1e293b;
+  }
+}
+
+/* Real iPhone / narrow phone: edge-to-edge, no frame */
+@media (max-width: 479px) {
+  .mobile-viewport {
+    padding: 0;
+  }
+
+  .mobile-shell {
+    width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border: none;
+  }
+}
+
+.leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+  z-index: 0;
+}
+
+.severity-low { background: #22c55e; }
+.severity-medium { background: #eab308; }
+.severity-high { background: #f97316; }
+.severity-critical { background: #ef4444; }
+
+.before-after-slider {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.75rem;
+}
+
+.before-after-slider img {
+  display: block;
+  width: 100%;
+  height: 320px;
+  object-fit: cover;
+}
+
+.before-after-slider .after {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.before-after-slider .slider-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: white;
+  cursor: ew-resize;
+  z-index: 10;
+  box-shadow: 0 0 8px rgba(0,0,0,0.5);
+}
+
+.before-after-slider .slider-handle::after {
+  content: '◀ ▶';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #334155;
+}
