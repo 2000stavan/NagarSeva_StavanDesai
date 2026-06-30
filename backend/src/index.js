@@ -17,14 +17,17 @@ import notificationRoutes from './routes/notifications.js';
 import i18nRoutes from './routes/i18n.js';
 import { startEscalationCron } from './cron/escalation.js';
 import { startWorkerCron } from './cron/worker.js';
+import { autoInitDatabase } from './db/autoInit.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173', credentials: true }));
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
+autoInitDatabase();
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 

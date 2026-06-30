@@ -3,8 +3,11 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+const isCloudDb = process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('localhost') && !process.env.DATABASE_URL.includes('127.0.0.1');
+
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl: isCloudDb ? { rejectUnauthorized: false } : false,
 });
 
 export default pool;
