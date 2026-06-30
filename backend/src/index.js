@@ -17,7 +17,7 @@ import notificationRoutes from './routes/notifications.js';
 import i18nRoutes from './routes/i18n.js';
 import { startEscalationCron } from './cron/escalation.js';
 import { startWorkerCron } from './cron/worker.js';
-import { autoInitDatabase } from './db/autoInit.js';
+import { autoInitDatabase, seedDemoDashboardData } from './db/autoInit.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -36,8 +36,17 @@ app.get('/api/init-db', async (_req, res) => {
     if (!process.env.DATABASE_URL) {
       return res.status(500).json({ status: 'error', message: 'DATABASE_URL environment variable is missing on Render!' });
     }
-    const result = await autoInitDatabase();
-    res.json({ status: 'success', message: 'Database initialization check completed', details: result });
+    const result = await seedDemoDashboardData();
+    res.json({ status: 'success', message: 'Database initialization and seeding completed successfully!', details: result });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+app.get('/api/seed', async (_req, res) => {
+  try {
+    const result = await seedDemoDashboardData();
+    res.json({ status: 'success', message: 'Loaded rich mock issues and worker jobs!', details: result });
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message });
   }
