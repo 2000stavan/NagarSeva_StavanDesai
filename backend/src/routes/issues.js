@@ -53,7 +53,7 @@ async function createIssue(req, res, isAnonymous = false) {
         confidence: 0.9,
       };
     } else {
-      ai = await classifyImage(file.path);
+      ai = await classifyImage(file.path, file.originalname);
     }
 
     const category = ai.category || 'other';
@@ -138,7 +138,7 @@ async function mergeDuplicate(req, res, originalId, lat, lng, isAnonymous) {
 router.post('/classify', upload.single('photo'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'Photo required' });
-    const ai = await classifyImage(req.file.path);
+    const ai = await classifyImage(req.file.path, req.file.originalname);
     const photoUrl = await uploadImage(req.file.path);
     res.json({ ai, photo_url: photoUrl });
   } catch (err) {

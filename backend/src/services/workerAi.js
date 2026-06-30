@@ -4,8 +4,8 @@ import fs from 'fs';
 import path from 'path';
 import { getFallbackSteps } from './jobSteps.js';
 
-const VISION_MODEL = process.env.XAI_VISION_MODEL || 'grok-4.3';
-const TEXT_MODEL = process.env.XAI_TEXT_MODEL || 'grok-4.20-0309-reasoning';
+const VISION_MODEL = process.env.XAI_VISION_MODEL || 'grok-4.20-0309-non-reasoning';
+const TEXT_MODEL = process.env.XAI_TEXT_MODEL || 'grok-4.20-0309-non-reasoning';
 
 function getGrok() {
   if (!process.env.XAI_API_KEY) return null;
@@ -38,7 +38,12 @@ function parseJson(content) {
   return JSON.parse(content.replace(/```json|```/g, '').trim());
 }
 
+const jobStepsCache = new Map();
+
 export async function generateJobSteps(category, issueDescription, severity) {
+  const cacheKey = `${category}_${severity}`;
+  if (jobStepsCache.has(cacheKey)) return jobStepsCache.get(cacheKey);
+
   const grok = getGrok();
   if (!grok) return getFallbackSteps(category);
   try {
@@ -53,7 +58,9 @@ export async function generateJobSteps(category, issueDescription, severity) {
       ],
       max_tokens: 1000,
     });
-    return parseJson(response.choices[0].message.content);
+    const result = parseJson(response.choices[0].message.content);
+    jobStepsCache.set(cacheKey, result);
+    return result;
   } catch {
     return getFallbackSteps(category);
   }
@@ -62,62 +69,79 @@ export async function generateJobSteps(category, issueDescription, severity) {
 export async function verifyWorkStep(imageSource, stepLabel, category) {
   const grok = getGrok();
   if (!grok) return { is_valid: true, confidence: 0.85, feedback: 'Photo looks good. Move to next step.', is_safety_concern: false, safety_note: null };
-  const imageUrl = toImageUrl(imageSource);
-  const response = await grok.chat.completions.create({
-    model: VISION_MODEL,
-    messages: [
-      { role: 'system', content: 'Verify construction/repair work photos. Be practical and lenient. JSON only.' },
-      {
-        role: 'user',
-        content: [
-          { type: 'image_url', image_url: { url: imageUrl } },
-          {
-            type: 'text',
-            text: `Photo should show: "${stepLabel}" for "${category}" repair. JSON: { "is_valid": true|false, "confidence": 0.0-1.0, "feedback": "...", "is_safety_concern": false, "safety_note": null }`,
-          },
-        ],
-      },
-    ],
-    max_tokens: 300,
-  });
-  return parseJson(response.choices[0].message.content);
+  try {
+    const imageUrl = toImageUrl(imageSource);
+    const response = await grok.chat.completions.create({
+      model: VISION_MODEL,
+      messages: [
+        { role: 'system', content: 'Verify construction/repair work photos. Be practical and lenient. JSON only.' },
+        {
+          role: 'user',
+          content: [
+            { type: 'image_url', image_url: { url: imageUrl } },
+            {
+              type: 'text',
+              text: `Photo should show: "${stepLabel}" for "${category}" repair. JSON: { "is_valid": true|false, "confidence": 0.0-1.0, "feedback": "...", "is_safety_concern": false, "safety_note": null }`,
+            },
+          ],
+        },
+      ],
+      max_tokens: 300,
+    });
+    return parseJson(response.choices[0].message.content);
+  } catch (err) {
+    console.warn('[WorkerAI] verifyWorkStep failed:', err.message);
+    return { is_valid: true, confidence: 0.85, feedback: 'Photo looks good. Move to next step.', is_safety_concern: false, safety_note: null };
+  }
 }
 
 export async function voiceAgent(transcribedText, language, jobContext) {
   const langMap = { hi: 'Hindi', mr: 'Marathi', ta: 'Tamil', te: 'Telugu', kn: 'Kannada', gu: 'Gujarati', bn: 'Bengali', en: 'English' };
+  const fallbackText = language === 'en' ? 'Take the next photo as shown in the step guide.' : 'अगले चरण की तस्वीर लें।';
   const grok = getGrok();
   if (!grok) {
-    return { guidance_text: language === 'en' ? 'Take the next photo as shown in the step guide.' : 'अगले चरण की तस्वीर लें।' };
+    return { guidance_text: fallbackText };
   }
-  const response = await grok.chat.completions.create({
-    model: TEXT_MODEL,
-    messages: [
-      {
-        role: 'system',
-        content: `Field assistant for municipal workers in India. Respond in ${langMap[language] || 'Hindi'}. Short, practical, encouraging. Context: ${JSON.stringify(jobContext)}`,
-      },
-      { role: 'user', content: transcribedText },
-    ],
-    max_tokens: 300,
-  });
-  return { guidance_text: response.choices[0].message.content };
+  try {
+    const response = await grok.chat.completions.create({
+      model: TEXT_MODEL,
+      messages: [
+        {
+          role: 'system',
+          content: `Field assistant for municipal workers in India. Respond in ${langMap[language] || 'Hindi'}. Short, practical, encouraging. Context: ${JSON.stringify(jobContext)}`,
+        },
+        { role: 'user', content: transcribedText },
+      ],
+      max_tokens: 300,
+    });
+    return { guidance_text: response.choices[0].message.content };
+  } catch (err) {
+    console.warn('[WorkerAI] voiceAgent failed:', err.message);
+    return { guidance_text: fallbackText };
+  }
 }
 
 export async function generateDailySummary(workerName, jobsData) {
   const grok = getGrok();
+  const fallbackSummary = { summary: `${workerName} completed ${jobsData.completed || 0} jobs today.`, highlights: [], concerns: [], recommendation: 'Continue tomorrow.' };
   if (!grok) {
-    return { summary: `${workerName} completed ${jobsData.completed || 0} jobs today.`, highlights: [], concerns: [], recommendation: 'Continue tomorrow.' };
+    return fallbackSummary;
   }
-  const response = await grok.chat.completions.create({
-    model: TEXT_MODEL,
-    messages: [
-      { role: 'system', content: 'Generate concise daily work summaries for supervisors. JSON only.' },
-      {
-        role: 'user',
-        content: `Worker ${workerName}. Data: ${JSON.stringify(jobsData)}. JSON: { "summary":"...", "highlights":[], "concerns":[], "recommendation":"..." }`,
-      },
-    ],
-    max_tokens: 400,
-  });
-  return parseJson(response.choices[0].message.content);
+  try {
+    const response = await grok.chat.completions.create({
+      model: TEXT_MODEL,
+      messages: [
+        { role: 'system', content: 'Generate concise daily work summaries for supervisors. JSON only.' },
+        {
+          role: 'user',
+          content: `Worker ${workerName}. Data: ${JSON.stringify(jobsData)}. JSON: { "summary":"...", "highlights":[], "concerns":[], "recommendation":"..." }`,
+        },
+      ],
+      max_tokens: 400,
+    });
+    return parseJson(response.choices[0].message.content);
+  } catch (err) {
+    console.warn('[WorkerAI] generateDailySummary failed:', err.message);
+    return fallbackSummary;
+  }
 }

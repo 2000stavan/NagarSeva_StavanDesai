@@ -1,10 +1,10 @@
 export const roleRedirects = {
-  citizen: '/',
+  citizen: '/home',
   authority: '/dashboard',
   supervisor: '/dashboard',
   worker: '/worker/jobs',
   ngo: '/dashboard',
-  school_reporter: '/',
+  school_reporter: '/home',
   admin: '/dashboard',
   journalist: '/dashboard',
 };

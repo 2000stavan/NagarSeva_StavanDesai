@@ -42,5 +42,5 @@ export async function uploadBuffer(buffer, originalName) {
         .end(buffer);
     });
   }
-  return `https://picsum.photos/seed/${Date.now()}/800/600`;
+  return 'https://images.unsplash.com/photo-1584463623578-3b3b44b82fc6?auto=format&fit=crop&w=800&q=80';
 }

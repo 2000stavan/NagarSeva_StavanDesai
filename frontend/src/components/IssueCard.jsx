@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { categoryLabel, severityColor, formatINR } from '../api/client';
+import { categoryLabel, severityColor, formatINR, getIssueImage, handleImageError } from '../api/client';
 import { ThumbsUp, Users, Clock } from 'lucide-react';
 
 export default function IssueCard({ issue }) {
@@ -9,9 +9,12 @@ export default function IssueCard({ issue }) {
       className="block bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-shadow"
     >
       <div className="flex gap-3 p-3">
-        {issue.photo_url && (
-          <img src={issue.photo_url} alt="" className="w-20 h-20 rounded-lg object-cover shrink-0" />
-        )}
+        <img
+          src={getIssueImage(issue.photo_url, issue.category)}
+          onError={(e) => handleImageError(e, issue.category)}
+          alt=""
+          className="w-20 h-20 rounded-lg object-cover shrink-0"
+        />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <span className={`w-2 h-2 rounded-full ${severityColor(issue.severity)}`} />

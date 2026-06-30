@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import api from '../api/client';
+import api, { getIssueImage, handleImageError } from '../api/client';
 import { useTranslation } from '../context/LanguageContext';
 import { MapPin, AlertTriangle } from 'lucide-react';
 
@@ -8,14 +8,13 @@ const priorityColor = { urgent: 'bg-red-500', high: 'bg-orange-500', normal: 'bg
 
 export default function WorkerJobsPage() {
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
+  const filter = searchParams.get('filter') || 'all';
   const [jobs, setJobs] = useState([]);
-  const [params] = useSearchParams();
-  const status = params.get('status');
 
   useEffect(() => {
-    const q = status ? `?status=${status}` : '';
-    api.get(`/worker/jobs${q}`).then((r) => setJobs(r.data));
-  }, [status]);
+    api.get(`/worker/jobs?status=${filter}`).then((r) => setJobs(r.data)).catch(() => {});
+  }, [filter]);
 
   return (
     <div className="p-4 space-y-3 pb-20">
@@ -26,7 +25,12 @@ export default function WorkerJobsPage() {
         jobs.map((job) => (
           <Link key={job.id} to={`/worker/jobs/${job.id}`} className="block bg-white rounded-xl border overflow-hidden shadow-sm">
             <div className="flex gap-3 p-3">
-              {job.photo_url && <img src={job.photo_url} alt="" className="w-16 h-16 rounded-lg object-cover" />}
+              <img
+                src={getIssueImage(job.photo_url, job.category)}
+                onError={(e) => handleImageError(e, job.category)}
+                alt=""
+                className="w-16 h-16 rounded-lg object-cover shrink-0"
+              />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className={`w-2 h-2 rounded-full ${priorityColor[job.priority] || priorityColor.normal}`} />

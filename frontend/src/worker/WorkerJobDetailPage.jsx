@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
-import api from '../api/client';
+import api, { getIssueImage, handleImageError } from '../api/client';
 import { useTranslation } from '../context/LanguageContext';
 import { MapPin, Navigation, Shield, Wrench } from 'lucide-react';
 
@@ -52,7 +52,12 @@ export default function WorkerJobDetailPage() {
 
   return (
     <div className="p-4 space-y-4 pb-24">
-      <img src={job.photo_url} alt="" className="w-full h-40 object-cover rounded-xl" />
+      <img
+        src={getIssueImage(job.photo_url, job.category)}
+        onError={(e) => handleImageError(e, job.category)}
+        alt=""
+        className="w-full h-40 object-cover rounded-xl"
+      />
       <div>
         <span className="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded capitalize">{job.category?.replace('_', ' ')}</span>
         <h1 className="text-xl font-bold mt-2">{job.title}</h1>

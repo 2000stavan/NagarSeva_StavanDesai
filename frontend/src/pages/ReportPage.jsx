@@ -160,14 +160,45 @@ function ReportContent({ step, setStep, preview, ai, classifying, position, setP
           <p className="text-slate-600">Step 2: Review AI classification</p>
           {preview && <img src={preview} alt="" className="rounded-xl w-full h-48 object-cover" />}
           {ai && (
-            <div className={`border rounded-xl p-4 space-y-2 ${ai._mock ? 'bg-amber-50 border-amber-200' : 'bg-emerald-50 border-emerald-200'}`}>
-              <p className="font-semibold text-emerald-800">
-                {ai._mock ? '⚠ Demo Classification (no API key)' : '🤖 AI Classification'}
-              </p>
-              <p>Category: <strong>{categoryLabel(ai.category)}</strong></p>
-              <p>Severity: <strong className="capitalize">{ai.severity}</strong></p>
-              <p>Est. cost: <strong>{formatINR(ai.estimated_cost_inr)}</strong></p>
-              <p className="text-sm text-slate-600">{ai.cost_reasoning}</p>
+            <div className="border rounded-xl p-4 space-y-3 bg-emerald-50 border-emerald-200">
+              <div className="flex items-center justify-between">
+                <p className="font-semibold text-emerald-800">
+                  🤖 AI Classification
+                </p>
+                <span className="text-xs text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded font-medium">Verify & Edit</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Category</label>
+                  <select
+                    value={form.category || ai.category || 'other'}
+                    onChange={(e) => setForm({ ...form, category: e.target.value })}
+                    className="w-full border rounded-lg px-2.5 py-1.5 bg-white text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  >
+                    <option value="pothole">Pothole</option>
+                    <option value="waste">Waste / Garbage</option>
+                    <option value="water_leakage">Water Leakage</option>
+                    <option value="streetlight">Streetlight</option>
+                    <option value="road_damage">Road Damage</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Severity</label>
+                  <select
+                    value={form.severity || ai.severity || 'medium'}
+                    onChange={(e) => setForm({ ...form, severity: e.target.value })}
+                    className="w-full border rounded-lg px-2.5 py-1.5 bg-white text-sm font-medium text-slate-800 capitalize focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="critical">Critical</option>
+                  </select>
+                </div>
+              </div>
+              <p className="text-sm pt-1">Est. cost: <strong>{formatINR(ai.estimated_cost_inr)}</strong></p>
+              <p className="text-xs text-slate-600">{ai.cost_reasoning}</p>
             </div>
           )}
           <input

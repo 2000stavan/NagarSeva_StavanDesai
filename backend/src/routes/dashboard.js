@@ -15,14 +15,14 @@ router.get('/stats', authRequired, requireRole('authority', 'admin', 'ngo', 'jou
          FROM issues WHERE status = 'resolved' AND resolved_at IS NOT NULL`
       ),
       pool.query(
-        `SELECT assigned_department AS department,
-                COUNT(*) FILTER (WHERE status NOT IN ('resolved','rejected'))::int AS open_count,
-                AVG(EXTRACT(EPOCH FROM (resolved_at - created_at)) / 86400)
-                  FILTER (WHERE status = 'resolved')::numeric(10,1) AS avg_days,
+        `SELECT i.assigned_department AS department,
+                COUNT(*) FILTER (WHERE i.status NOT IN ('resolved','rejected'))::int AS open_count,
+                AVG(EXTRACT(EPOCH FROM (i.resolved_at - i.created_at)) / 86400)
+                  FILTER (WHERE i.status = 'resolved')::numeric(10,1) AS avg_days,
                 COALESCE(AVG(sr.rating), 0)::numeric(3,2) AS satisfaction
          FROM issues i
          LEFT JOIN satisfaction_ratings sr ON sr.issue_id = i.id
-         GROUP BY assigned_department
+         GROUP BY i.assigned_department
          ORDER BY open_count DESC`
       ),
       pool.query(`SELECT COUNT(*)::int AS c FROM issues WHERE escalation_level > 0 AND status NOT IN ('resolved','rejected')`),

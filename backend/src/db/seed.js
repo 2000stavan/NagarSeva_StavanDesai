@@ -10,6 +10,37 @@ const SEVERITIES = ['low', 'medium', 'high', 'critical'];
 const STATUSES = ['open', 'verified', 'in_progress', 'resolved', 'open', 'open', 'verified'];
 const DEPARTMENTS = { pothole: 'Roads', road_damage: 'Roads', water_leakage: 'Water', streetlight: 'Electricity', waste: 'Waste', other: 'Parks' };
 
+const CATEGORY_IMAGES = {
+  pothole: [
+    'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1578885136359-16c8bd4d3a8e?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1584463623578-3b3b44b82fc6?auto=format&fit=crop&w=800&q=80'
+  ],
+  water_leakage: [
+    'https://images.unsplash.com/photo-1542013936693-8c463f88e0b0?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=800&q=80'
+  ],
+  streetlight: [
+    'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1541888946425-d0ebb18086f6?auto=format&fit=crop&w=800&q=80'
+  ],
+  waste: [
+    'https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1605600659908-0ef719419d41?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1583508915901-b5f84c1dcde1?auto=format&fit=crop&w=800&q=80'
+  ],
+  road_damage: [
+    'https://images.unsplash.com/photo-1584463623578-3b3b44b82fc6?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=800&q=80'
+  ],
+  other: [
+    'https://images.unsplash.com/photo-1517646287270-a5a9ca602e5c?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1590086782792-42dd2350140d?auto=format&fit=crop&w=800&q=80'
+  ]
+};
+
 function randomOffset(maxKm = 15) {
   const r = maxKm / 111;
   const angle = Math.random() * 2 * Math.PI;
@@ -137,7 +168,7 @@ async function seed() {
         category,
         severity,
         status,
-        `https://picsum.photos/seed/${i + 100}/800/600`,
+        (CATEGORY_IMAGES[category] || CATEGORY_IMAGES.other)[i % (CATEGORY_IMAGES[category] || CATEGORY_IMAGES.other).length],
         pos.lat,
         pos.lng,
         reporter,
@@ -242,7 +273,7 @@ async function seed() {
         await pool.query(
           `INSERT INTO work_steps (job_id, step_number, step_label, photo_url, ai_verified, ai_feedback)
            VALUES ($1,$2,$3,$4,true,'Photo verified')`,
-          [job[0].id, s, stepPlan.steps[s - 1].label, `https://picsum.photos/seed/w${i}${s}/400/300`]
+          [job[0].id, s, stepPlan.steps[s - 1].label, (CATEGORY_IMAGES[iss[0].category] || CATEGORY_IMAGES.other)[(i + s) % (CATEGORY_IMAGES[iss[0].category] || CATEGORY_IMAGES.other).length]]
         );
       }
     }

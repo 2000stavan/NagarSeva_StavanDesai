@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import api, { formatINR, categoryLabel, severityColor, statusSteps } from '../api/client';
+import api, { formatINR, categoryLabel, severityColor, statusSteps, getIssueImage, handleImageError } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import BeforeAfterSlider from '../components/BeforeAfterSlider';
 import { ThumbsUp, Flag, Users, Star, IndianRupee, AlertCircle } from 'lucide-react';
@@ -55,9 +55,18 @@ export default function IssueDetailPage() {
   return (
     <div className="max-w-2xl mx-auto p-4 pb-6 space-y-6">
       {issue.status === 'resolved' && issue.resolved_photo_url ? (
-        <BeforeAfterSlider before={issue.photo_url} after={issue.resolved_photo_url} />
+        <BeforeAfterSlider
+          before={getIssueImage(issue.photo_url, issue.category)}
+          after={getIssueImage(issue.resolved_photo_url, issue.category)}
+          category={issue.category}
+        />
       ) : (
-        <img src={issue.photo_url} alt={issue.title} className="rounded-xl w-full h-64 object-cover" />
+        <img
+          src={getIssueImage(issue.photo_url, issue.category)}
+          onError={(e) => handleImageError(e, issue.category)}
+          alt={issue.title}
+          className="rounded-xl w-full h-64 object-cover"
+        />
       )}
 
       <div>
@@ -88,7 +97,12 @@ export default function IssueDetailPage() {
           <div className="flex gap-3 overflow-x-auto pb-2">
             {issue.repair_journey.map((s) => (
               <div key={s.step_number} className="shrink-0 w-28">
-                <img src={s.photo_url} alt="" className="w-28 h-20 object-cover rounded-lg" />
+                <img
+                  src={getIssueImage(s.photo_url, issue.category)}
+                  onError={(e) => handleImageError(e, issue.category)}
+                  alt=""
+                  className="w-28 h-20 object-cover rounded-lg"
+                />
                 <p className="text-[10px] text-slate-600 mt-1">{s.step_label}</p>
               </div>
             ))}
@@ -191,7 +205,7 @@ export default function IssueDetailPage() {
         </div>
       )}
 
-      <Link to="/" className="text-emerald-700 font-medium">← Back to map</Link>
+      <Link to="/home" className="text-emerald-700 font-medium">← Back to map</Link>
     </div>
   );
 }

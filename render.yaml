@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: nagarseva-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 5001
+      - key: NODE_ENV
+        value: production

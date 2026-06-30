@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-import api from '../api/client';
+import api, { getIssueImage, handleImageError } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
 export default function DashboardPage() {
@@ -21,23 +21,13 @@ export default function DashboardPage() {
   const [assignForm, setAssignForm] = useState({ worker_id: '', scheduled_date: '', priority: 'normal', estimated_duration_hours: 2 });
 
   const load = () => {
-    Promise.all([
-      api.get('/dashboard/stats'),
-      api.get('/dashboard/seasonal'),
-      api.get('/dashboard/aging'),
-      api.get('/supervisor/workers'),
-      api.get('/supervisor/live'),
-      api.get('/supervisor/pending'),
-      api.get('/supervisor/sos'),
-    ]).then(([s, se, a, w, l, p, sos]) => {
-      setStats(s.data);
-      setSeasonal(se.data);
-      setAging(a.data);
-      setWorkers(w.data);
-      setLiveJobs(l.data);
-      setPending(p.data);
-      setSosAlerts(sos.data);
-    }).catch(() => {});
+    api.get('/dashboard/stats').then((r) => setStats(r.data)).catch(() => {});
+    api.get('/dashboard/aging').then((r) => setAging(r.data)).catch(() => {});
+    api.get('/supervisor/workers').then((r) => setWorkers(r.data)).catch(() => {});
+    api.get('/supervisor/live').then((r) => setLiveJobs(r.data)).catch(() => {});
+    api.get('/supervisor/pending').then((r) => setPending(r.data)).catch(() => {});
+    api.get('/supervisor/sos').then((r) => setSosAlerts(r.data)).catch(() => {});
+    api.get('/dashboard/seasonal').then((r) => setSeasonal(r.data)).catch(() => {});
   };
 
   useEffect(() => {
@@ -54,14 +44,24 @@ export default function DashboardPage() {
   };
 
   const approveJob = async (jobId) => {
-    await api.post(`/supervisor/jobs/${jobId}/approve`);
-    load();
+    try {
+      await api.post(`/supervisor/jobs/${jobId}/approve`);
+      load();
+    } catch (err) {
+      alert('Approval failed: ' + (err.response?.data?.error || err.message));
+    }
   };
 
   const rejectJob = async (jobId) => {
     const notes = prompt('Rejection reason:');
-    if (notes) await api.post(`/supervisor/jobs/${jobId}/reject`, { notes });
-    load();
+    if (notes) {
+      try {
+        await api.post(`/supervisor/jobs/${jobId}/reject`, { notes });
+        load();
+      } catch (err) {
+        alert('Rejection failed: ' + (err.response?.data?.error || err.message));
+      }
+    }
   };
 
   if (!user) return <div className="p-8 text-center"><Link to="/login" className="text-emerald-700">Login required</Link></div>;
@@ -134,7 +134,14 @@ export default function DashboardPage() {
               <div className="w-full bg-slate-200 rounded-full h-2 mt-2">
                 <div className="bg-orange-500 h-2 rounded-full" style={{ width: `${((j.steps_done || 0) / 5) * 100}%` }} />
               </div>
-              {j.last_photo && <img src={j.last_photo} alt="" className="w-16 h-12 object-cover rounded mt-2" />}
+              {j.last_photo && (
+                <img
+                  src={getIssueImage(j.last_photo, j.category)}
+                  onError={(e) => handleImageError(e, j.category)}
+                  alt=""
+                  className="w-16 h-12 object-cover rounded mt-2"
+                />
+              )}
             </div>
           ))}
         </div>
@@ -146,9 +153,21 @@ export default function DashboardPage() {
             <div key={j.id} className="bg-white border rounded-xl p-3">
               <p className="font-semibold">{j.title}</p>
               <p className="text-xs text-slate-500">{j.worker_name} · {j.step_count} steps · {j.actual_duration_hours ? `${parseFloat(j.actual_duration_hours).toFixed(1)}h` : '—'}</p>
-              <div className="flex gap-2 mt-2">
-                <button onClick={() => approveJob(j.id)} className="flex-1 bg-green-600 text-white py-2 rounded-lg text-sm">Approve</button>
-                <button onClick={() => rejectJob(j.id)} className="flex-1 border py-2 rounded-lg text-sm">Reject</button>
+              <div className="flex gap-3 mt-3 relative z-10">
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); approveJob(j.id); }}
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white py-2.5 px-4 rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  ✓ Approve Work
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); rejectJob(j.id); }}
+                  className="flex-1 bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-700 border border-red-200 py-2.5 px-4 rounded-xl font-bold text-sm transition cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  ✕ Reject
+                </button>
               </div>
             </div>
           ))}

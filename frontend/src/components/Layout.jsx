@@ -23,7 +23,7 @@ export default function Layout({ children }) {
     <MobileShell>
       <header className="shrink-0 bg-emerald-700 text-white shadow-lg z-50">
         <div className="px-4 py-3 flex items-center justify-between gap-2">
-          <Link to="/" className="flex items-center gap-2 font-bold text-base shrink-0">
+          <Link to="/home" className="flex items-center gap-2 font-bold text-base shrink-0">
             <Shield className="w-5 h-5" />
             {t('appName')}
           </Link>

@@ -27,6 +27,7 @@ export default function App() {
       <LanguageProvider>
       <BrowserRouter>
         <Routes>
+          <Route path="/" element={<PortalLoginPage />} />
           <Route path="/login" element={<PortalLoginPage />} />
           <Route path="/worker/login" element={<Navigate to="/login?portal=worker" replace />} />
 
@@ -58,8 +59,8 @@ export default function App() {
           <Route path="/*" element={
             <Layout>
               <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/home" element={<RoleRedirect />} />
+                <Route path="/" element={<Navigate to="/login" replace />} />
+                <Route path="/home" element={<HomePage />} />
                 <Route path="/report" element={<ReportPage />} />
                 <Route path="/report/anonymous" element={<ReportPage anonymous />} />
                 <Route path="/issues/:id" element={<IssueDetailPage />} />
