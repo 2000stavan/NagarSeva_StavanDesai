@@ -31,6 +31,18 @@ autoInitDatabase();
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 
+app.get('/api/init-db', async (_req, res) => {
+  try {
+    if (!process.env.DATABASE_URL) {
+      return res.status(500).json({ status: 'error', message: 'DATABASE_URL environment variable is missing on Render!' });
+    }
+    const result = await autoInitDatabase();
+    res.json({ status: 'success', message: 'Database initialization check completed', details: result });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 app.get('/', (_req, res) => {
   const frontend = process.env.FRONTEND_URL || 'http://localhost:5173';
   res.redirect(frontend);

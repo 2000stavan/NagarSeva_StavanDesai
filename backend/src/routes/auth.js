@@ -47,8 +47,11 @@ router.post('/login', async (req, res) => {
     const token = signToken(user);
     res.json({ token, user });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Login failed' });
+    console.error('Login error:', err);
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ error: 'JWT_SECRET missing on Render environment variables', details: err.message });
+    }
+    res.status(500).json({ error: 'Login failed: ' + (err.message || 'Database error'), details: err.message });
   }
 });
 

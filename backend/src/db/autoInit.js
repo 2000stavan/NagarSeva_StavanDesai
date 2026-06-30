@@ -53,8 +53,11 @@ export async function autoInitDatabase() {
       `, [citizenId]);
 
       console.log('Automated Deployment: Database initialized successfully!');
+      return { initialized: true, message: 'Created tables and seeded demo accounts.' };
     }
+    return { initialized: false, message: 'Database tables already exist.' };
   } catch (err) {
     console.warn('Auto initialization check notice:', err.message);
+    throw err;
   }
 }
