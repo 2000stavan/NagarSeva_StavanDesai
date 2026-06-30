@@ -22,42 +22,42 @@ export async function autoInitDatabase() {
 
       const workerSchemaSql = fs.readFileSync(path.join(__dirname, 'worker-schema.sql'), 'utf8');
       await pool.query(workerSchemaSql);
+    }
 
-      console.log('Automated Deployment: Seeding demo accounts and mock civic data...');
-      const hash = await bcrypt.hash('password123', 10);
-      
-      // Seed Demo Accounts
-      await pool.query(`
-        INSERT INTO users (email, password_hash, name, role, department, karma_points)
-        VALUES 
-          ('demo@communityhero.in', $1, 'Priya Sharma', 'citizen', NULL, 120),
-          ('roads@mumbai.gov.in', $1, 'Rajesh Gupta', 'authority', 'Roads', 0),
-          ('worker.roads1@nagarseva.in', $1, 'Suresh Kumar', 'worker', 'Roads', 0),
-          ('supervisor@mumbai.gov.in', $1, 'Amit Verma', 'supervisor', 'Roads', 0),
-          ('admin@mumbai.gov.in', $1, 'NagarSeva Admin', 'admin', 'Roads', 0)
-        ON CONFLICT (email) DO NOTHING;
-      `, [hash]);
+    console.log('Automated Deployment: Ensuring demo accounts exist with password123...');
+    const hash = await bcrypt.hash('password123', 10);
+    
+    // Always upsert Demo Accounts so login guaranteed to work
+    await pool.query(`
+      INSERT INTO users (email, password_hash, name, role, department, civic_score)
+      VALUES 
+        ('demo@communityhero.in', $1, 'Priya Sharma', 'citizen', NULL, 120),
+        ('roads@mumbai.gov.in', $1, 'Rajesh Gupta', 'authority', 'Roads', 0),
+        ('worker.roads1@nagarseva.in', $1, 'Suresh Kumar', 'worker', 'Roads', 0),
+        ('supervisor@mumbai.gov.in', $1, 'Amit Verma', 'supervisor', 'Roads', 0),
+        ('admin@mumbai.gov.in', $1, 'NagarSeva Admin', 'admin', 'Roads', 0)
+      ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash;
+    `, [hash]);
 
-      // Seed departments
-      const depts = ['Roads', 'Water', 'Electricity', 'Waste', 'Parks', 'Sanitation'];
-      for (const d of depts) {
-        await pool.query(`INSERT INTO departments (name, description) VALUES ($1, $1 || ' Department') ON CONFLICT DO NOTHING`, [d]);
-      }
+    // Ensure departments exist
+    const depts = ['Roads', 'Water', 'Electricity', 'Waste', 'Parks', 'Sanitation'];
+    for (const d of depts) {
+      await pool.query(`INSERT INTO departments (name, description) VALUES ($1, $1 || ' Department') ON CONFLICT DO NOTHING`, [d]);
+    }
 
-      // Seed initial issue
+    if (!tableExists) {
+      // Seed initial issue only if table was freshly created
       const userRes = await pool.query(`SELECT id FROM users WHERE email = 'demo@communityhero.in'`);
       const citizenId = userRes.rows[0]?.id || 1;
       await pool.query(`
-        INSERT INTO issues (title, description, category, severity, status, lat, lng, address, department, created_by)
+        INSERT INTO issues (title, description, category, severity, status, latitude, longitude, location_name, department, reported_by)
         VALUES ('Deep Pothole near Station Road', 'Severe road damage causing traffic congestion.', 'pothole', 'high', 'verified', 19.076, 72.877, 'Station Road, Mumbai', 'Roads', $1)
       `, [citizenId]);
-
-      console.log('Automated Deployment: Database initialized successfully!');
-      return { initialized: true, message: 'Created tables and seeded demo accounts.' };
     }
-    return { initialized: false, message: 'Database tables already exist.' };
+
+    return { initialized: true, message: 'Verified tables and ensured all demo accounts have password123.' };
   } catch (err) {
-    console.warn('Auto initialization check notice:', err.message);
+    console.warn('Auto initialization check error:', err.message);
     throw err;
   }
 }
