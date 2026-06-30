@@ -4,12 +4,13 @@ import fs from 'fs';
 import path from 'path';
 import { getFallbackSteps } from './jobSteps.js';
 
-const VISION_MODEL = process.env.XAI_VISION_MODEL || 'grok-4.20-0309-non-reasoning';
-const TEXT_MODEL = process.env.XAI_TEXT_MODEL || 'grok-4.20-0309-non-reasoning';
+const VISION_MODEL = process.env.XAI_VISION_MODEL || 'grok-2-vision-1212';
+const TEXT_MODEL = process.env.XAI_TEXT_MODEL || 'grok-2-1212';
 
 function getGrok() {
-  if (!process.env.XAI_API_KEY) return null;
-  return new OpenAI({ apiKey: process.env.XAI_API_KEY, baseURL: 'https://api.x.ai/v1' });
+  const apiKey = process.env.XAI_API_KEY || process.env.GROK_API_KEY;
+  if (!apiKey) return null;
+  return new OpenAI({ apiKey, baseURL: 'https://api.x.ai/v1' });
 }
 
 function toImageUrl(source) {
