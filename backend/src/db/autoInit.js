@@ -39,12 +39,6 @@ export async function autoInitDatabase() {
       ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash;
     `, [hash]);
 
-    // Ensure departments exist
-    const depts = ['Roads', 'Water', 'Electricity', 'Waste', 'Parks', 'Sanitation'];
-    for (const d of depts) {
-      await pool.query(`INSERT INTO departments (name, description) VALUES ($1, $1 || ' Department') ON CONFLICT DO NOTHING`, [d]);
-    }
-
     if (!tableExists) {
       // Seed initial issue only if table was freshly created
       const userRes = await pool.query(`SELECT id FROM users WHERE email = 'demo@communityhero.in'`);
@@ -57,7 +51,7 @@ export async function autoInitDatabase() {
 
     return { initialized: true, message: 'Verified tables and ensured all demo accounts have password123.' };
   } catch (err) {
-    console.warn('Auto initialization check error:', err.message);
-    throw err;
+    console.error('Auto initialization error:', err.message);
+    return { initialized: false, error: err.message };
   }
 }
