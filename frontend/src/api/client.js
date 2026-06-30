@@ -49,8 +49,8 @@ export const getIssueImage = (photoUrl, category) => {
 };
 
 export const handleImageError = (e, category) => {
-  const fallback = FRONTEND_CATEGORY_IMAGES[category] || FRONTEND_CATEGORY_IMAGES.other;
-  if (e.target.src !== fallback) {
-    e.target.src = fallback;
+  const svgFallback = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="100%" height="100%" fill="%23f1f5f9"/><text x="50%" y="50%" font-family="sans-serif" font-size="18" font-weight="600" fill="%2364748b" text-anchor="middle" dy=".3em">${(category || 'Urban Issue').toUpperCase()}</text></svg>`;
+  if (e.target.src !== svgFallback) {
+    e.target.src = svgFallback;
   }
 };

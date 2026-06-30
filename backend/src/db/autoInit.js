@@ -71,52 +71,63 @@ export async function seedDemoDashboardData() {
           description: 'Large 3-foot crater on left lane causing severe two-wheeler skidding risk.',
           category: 'pothole', severity: 'critical', status: 'in_progress',
           photo_url: 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=800&q=80',
-          lat: 19.117, lng: 72.882, loc: 'Jogeshwari-Vikhroli Link Road, Powai'
+          lat: 19.117, lng: 72.882, loc: 'Jogeshwari-Vikhroli Link Road, Powai',
+          cost: 18500, dept: 'Roads', affected: 45
         },
         {
           title: 'Massive Water Pipe Leak outside Dadar Station',
           description: 'High pressure drinking water main rupture flooding the sidewalk.',
           category: 'water_leakage', severity: 'high', status: 'verified',
           photo_url: 'https://images.unsplash.com/photo-1542013936693-8c463f88e0b0?auto=format&fit=crop&w=800&q=80',
-          lat: 19.018, lng: 72.843, loc: 'Dadar West Railway Station Entrance'
+          lat: 19.018, lng: 72.843, loc: 'Dadar West Railway Station Entrance',
+          cost: 45000, dept: 'Water', affected: 120
         },
         {
           title: 'Entire Streetlight Row Dead near Shivaji Park',
           description: 'Pitch dark walking path along perimeter after recent monsoon rains.',
           category: 'streetlight', severity: 'medium', status: 'open',
           photo_url: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80',
-          lat: 19.026, lng: 72.838, loc: 'Shivaji Park Perimeter Road, Dadar'
+          lat: 19.026, lng: 72.838, loc: 'Shivaji Park Perimeter Road, Dadar',
+          cost: 8500, dept: 'Electricity', affected: 30
         },
         {
           title: 'Overflowing Municipal Waste Dumpster',
           description: 'Uncollected organic and solid waste blocking pedestrian footwalk.',
           category: 'waste', severity: 'medium', status: 'verified',
           photo_url: 'https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&w=800&q=80',
-          lat: 19.058, lng: 72.830, loc: 'Linking Road Junction, Bandra West'
+          lat: 19.058, lng: 72.830, loc: 'Linking Road Junction, Bandra West',
+          cost: 3500, dept: 'Waste', affected: 85
         },
         {
           title: 'Deep Road Subsidence outside Kurla Terminal',
           description: 'Asphalt sinking near bus depot causing bottleneck.',
           category: 'road_damage', severity: 'high', status: 'resolved',
           photo_url: 'https://images.unsplash.com/photo-1584463623578-3b3b44b82fc6?auto=format&fit=crop&w=800&q=80',
-          lat: 19.066, lng: 72.888, loc: 'Kurla East Bus Depot'
+          lat: 19.066, lng: 72.888, loc: 'Kurla East Bus Depot',
+          cost: 65000, dept: 'Roads', affected: 200
         },
         {
           title: 'Fallen Tree Branch Damaging Footpath Fence',
           description: 'Heavy branch obstructing morning walkers trail.',
           category: 'other', severity: 'low', status: 'open',
           photo_url: 'https://images.unsplash.com/photo-1541888946425-d0ebb18086f6?auto=format&fit=crop&w=800&q=80',
-          lat: 19.034, lng: 72.855, loc: 'Five Gardens, Matunga East'
+          lat: 19.034, lng: 72.855, loc: 'Five Gardens, Matunga East',
+          cost: 4000, dept: 'Parks', affected: 15
         }
       ];
 
       for (const iss of demoIssues) {
         await pool.query(`
-          INSERT INTO issues (title, description, category, severity, status, photo_url, latitude, longitude, location_name, reported_by, upvotes)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-        `, [iss.title, iss.description, iss.category, iss.severity, iss.status, iss.photo_url, iss.lat, iss.lng, iss.loc, citizenId, Math.floor(Math.random() * 25) + 5]);
+          INSERT INTO issues (title, description, category, severity, status, photo_url, latitude, longitude, location_name, reported_by, upvotes, estimated_cost, assigned_department, affected_count)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+        `, [iss.title, iss.description, iss.category, iss.severity, iss.status, iss.photo_url, iss.lat, iss.lng, iss.loc, citizenId, Math.floor(Math.random() * 25) + 5, iss.cost, iss.dept, iss.affected]);
       }
     }
+
+    // Always backfill existing issues with missing estimated cost, department, or affected counts
+    await pool.query(`UPDATE issues SET estimated_cost = 14500 WHERE estimated_cost IS NULL OR estimated_cost = 0`);
+    await pool.query(`UPDATE issues SET assigned_department = 'Roads' WHERE assigned_department IS NULL OR assigned_department = ''`);
+    await pool.query(`UPDATE issues SET affected_count = 18 WHERE affected_count IS NULL OR affected_count = 0`);
 
     // Check existing worker jobs assigned to Suresh Kumar
     const existingJobs = await pool.query(`SELECT COUNT(*) FROM job_assignments WHERE worker_id = $1`, [workerId]);

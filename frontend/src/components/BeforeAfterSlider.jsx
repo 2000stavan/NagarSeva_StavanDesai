@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
+import { handleImageError } from '../api/client';
 
-export default function BeforeAfterSlider({ before, after }) {
+export default function BeforeAfterSlider({ before, after, category }) {
   const [position, setPosition] = useState(50);
   const containerRef = useRef(null);
   const dragging = useRef(false);
@@ -25,13 +26,13 @@ export default function BeforeAfterSlider({ before, after }) {
     };
   }, []);
 
-  if (!after) return <img src={before} alt="Issue" className="rounded-xl w-full h-64 object-cover" />;
+  if (!after) return <img src={before} onError={(e) => handleImageError(e, category)} alt="Issue" className="rounded-xl w-full h-64 object-cover" />;
 
   return (
     <div ref={containerRef} className="before-after-slider select-none">
-      <img src={before} alt="Before" />
+      <img src={before} onError={(e) => handleImageError(e, category)} alt="Before" />
       <div className="after" style={{ width: `${position}%` }}>
-        <img src={after} alt="After" style={{ width: `${100 / (position / 100)}%`, maxWidth: 'none' }} />
+        <img src={after} onError={(e) => handleImageError(e, category)} alt="After" style={{ width: `${100 / (position / 100)}%`, maxWidth: 'none' }} />
       </div>
       <div
         className="slider-handle"
