@@ -9,16 +9,21 @@ const priorityColor = { urgent: 'bg-red-500', high: 'bg-orange-500', normal: 'bg
 export default function WorkerJobsPage() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
-  const filter = searchParams.get('filter') || 'all';
+  const filter = searchParams.get('status') || searchParams.get('filter') || 'all';
   const [jobs, setJobs] = useState([]);
 
   useEffect(() => {
-    api.get(`/worker/jobs?status=${filter}`).then((r) => setJobs(r.data)).catch(() => {});
+    const query = filter && filter !== 'all' ? `?status=${filter}` : '';
+    api.get(`/worker/jobs${query}`).then((r) => setJobs(r.data)).catch(() => {});
   }, [filter]);
 
   return (
     <div className="p-4 space-y-3 pb-20">
-      <h1 className="text-xl font-bold text-slate-800">{t('myJobs')}</h1>
+      <h1 className="text-xl font-bold text-slate-800">
+        {filter === 'in_progress' || filter === 'active' ? t('active') :
+         filter === 'completed' || filter === 'done' ? t('done') :
+         t('myJobs')}
+      </h1>
       {jobs.length === 0 ? (
         <p className="text-center text-slate-500 py-12">{t('noJobs')}</p>
       ) : (
