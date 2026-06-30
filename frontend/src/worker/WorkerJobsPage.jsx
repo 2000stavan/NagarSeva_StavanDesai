@@ -43,9 +43,8 @@ export default function WorkerJobsPage() {
                   {job.sos_triggered && <AlertTriangle className="w-4 h-4 text-red-500" />}
                 </div>
                 <p className="font-semibold truncate">{job.title}</p>
-                <p className="text-xs text-slate-500 flex items-center gap-1"><MapPin className="w-3 h-3" />{job.location_name}</p>
-                <p className="text-xs text-orange-700 mt-1">
-                  {job.steps_done || 0} / {job.total_steps || '?'} {t('steps').toLowerCase()} · {job.status}
+                <p className={`text-xs mt-1 font-medium ${job.status === 'completed' || job.status === 'checked_out' ? 'text-emerald-600' : 'text-orange-700'}`}>
+                  {job.status === 'completed' || job.status === 'checked_out' ? (job.total_steps || 5) : (job.steps_done || 0)} / {job.total_steps || 5} {t('steps').toLowerCase()} · {job.status}
                 </p>
               </div>
             </div>

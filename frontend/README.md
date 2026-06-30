@@ -1,16 +1,17 @@
-# React + Vite
+# NagarSeva (Community Hero) — Frontend Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+AI-powered hyperlocal civic issue reporting and municipal command portal.
 
-Currently, two official plugins are available:
+## 🌐 Live Deployed Portal
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Live Web Portal (Vercel)**: [https://nagar-seva-stavan-desai.vercel.app](https://nagar-seva-stavan-desai.vercel.app)
+- **Backend API (Render)**: [https://nagarseva-backend.onrender.com](https://nagarseva-backend.onrender.com)
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## ✨ Features
 
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+- **Multimodal AI Classification (Powered by Google Gemini API)** — Automated defect classification, severity scoring, and cost estimation.
+- **AI Voice Assistant** — Context-aware Indic voice guidance for field engineering teams.
+- **Municipal Command Grid** — Real-time Authority triage, fleet tracking, and SLA monitoring.
+- **Indic Language Localization** — Seamless translation across Indian regional languages via Sarvam AI.

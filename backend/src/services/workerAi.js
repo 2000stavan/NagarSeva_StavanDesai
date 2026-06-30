@@ -98,7 +98,10 @@ export async function verifyWorkStep(imageSource, stepLabel, category) {
 
 export async function voiceAgent(transcribedText, language, jobContext) {
   const langMap = { hi: 'Hindi', mr: 'Marathi', ta: 'Tamil', te: 'Telugu', kn: 'Kannada', gu: 'Gujarati', bn: 'Bengali', en: 'English' };
-  const fallbackText = language === 'en' ? 'Take the next photo as shown in the step guide.' : 'अगले चरण की तस्वीर लें।';
+  const fallbackText = language === 'en'
+    ? (jobContext?.issue_title ? `Issue: ${jobContext.issue_title} at ${jobContext.location || 'site'}. Please follow step ${jobContext.current_step || 1}.` : 'Take the next photo as shown in the step guide.')
+    : (jobContext?.issue_title ? `समस्या: ${jobContext.issue_title} (${jobContext.location || 'स्थान'})। कृपया चरण ${jobContext.current_step || 1} पूरा करें।` : 'अगले चरण की तस्वीर लें।');
+  
   const grok = getGrok();
   if (!grok) {
     return { guidance_text: fallbackText };
@@ -109,11 +112,16 @@ export async function voiceAgent(transcribedText, language, jobContext) {
       messages: [
         {
           role: 'system',
-          content: `Field assistant for municipal workers in India. Respond in ${langMap[language] || 'Hindi'}. Short, practical, encouraging. Context: ${JSON.stringify(jobContext)}`,
+          content: `You are an AI field assistant for Indian municipal engineering crews.
+CRITICAL MANDATES:
+1. Respond STRICTLY in ${langMap[language] || 'Hindi'}.
+2. Keep your answer EXTREMELY SHORT and direct: maximum 1 or 2 short sentences (under 30 words total). Never write long paragraphs.
+3. You have full context of the worker's assigned issue: ${JSON.stringify(jobContext || {})}.
+If asked "what is the issue?" or about the task, clearly state the exact problem title, description, and location from the context in brief words so the worker can understand instantly.`,
         },
         { role: 'user', content: transcribedText },
       ],
-      max_tokens: 300,
+      max_tokens: 100,
     });
     return { guidance_text: response.choices[0].message.content };
   } catch (err) {

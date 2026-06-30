@@ -76,6 +76,15 @@ export default function WorkerActiveJobPage() {
   const askVoice = async (text) => {
     const { data } = await api.post('/worker/voice', { text, language: lang, job_id: id, current_step: currentStep });
     setGuidance(data.guidance_text);
+    if (data.audio_base64) {
+      try {
+        const audio = new Audio(`data:audio/wav;base64,${data.audio_base64}`);
+        audio.play();
+        return;
+      } catch (e) {
+        console.warn('Audio play error, falling back to TTS', e);
+      }
+    }
     if ('speechSynthesis' in window) {
       const u = new SpeechSynthesisUtterance(data.guidance_text);
       u.lang = speechLocale(lang);

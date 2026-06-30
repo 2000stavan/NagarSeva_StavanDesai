@@ -88,3 +88,35 @@ export async function translateBatch(stringMap, targetLang, { concurrency = 4 } 
   await Promise.all(Array.from({ length: Math.min(concurrency, entries.length) }, worker));
   return result;
 }
+
+/** Synthesize audio using Sarvam AI Text-to-Speech (bulbul:v1) */
+export async function synthesizeSpeech(text, targetLang = 'hi') {
+  if (!text?.trim() || !isSarvamConfigured()) return null;
+  const target = SARVAM_LANG_MAP[targetLang] || `${targetLang}-IN`;
+  try {
+    const res = await fetch('https://api.sarvam.ai/text-to-speech', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-subscription-key': process.env.SARVAM_API_KEY,
+      },
+      body: JSON.stringify({
+        inputs: [text.slice(0, 450)],
+        target_language_code: target,
+        speaker: 'meera',
+        pitch: 0,
+        pace: 1.05,
+        loudness: 1.5,
+        speech_sample_rate: 8000,
+        enable_preprocessing: true,
+        model: 'bulbul:v1'
+      }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.audios?.[0] || null;
+  } catch (err) {
+    console.error('Sarvam TTS error:', err.message);
+    return null;
+  }
+}

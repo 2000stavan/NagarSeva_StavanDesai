@@ -8,6 +8,7 @@ import { getFallbackSteps } from '../services/jobSteps.js';
 import { verifyWorkStep, voiceAgent } from '../services/workerAi.js';
 import { uploadImage } from '../services/cloudinary.js';
 import { createNotification } from '../services/notifications.js';
+import { synthesizeSpeech } from '../services/sarvam.js';
 
 const router = express.Router();
 const uploadDir = path.join(process.cwd(), 'uploads');
@@ -249,13 +250,43 @@ router.post('/voice', authRequired, requireRole('worker'), async (req, res) => {
   try {
     const { text, language = 'hi', job_id, current_step } = req.body;
     if (!text) return res.status(400).json({ error: 'text required' });
-    let jobContext = {};
+    
+    let job = null;
     if (job_id) {
-      const job = await getJobForWorker(job_id, req.user.id);
-      jobContext = { category: job?.category, step: current_step, title: job?.title };
+      job = await getJobForWorker(job_id, req.user.id);
     }
+    if (!job) {
+      const { rows } = await pool.query(
+        `SELECT ja.*, i.title, i.description, i.category, i.severity, i.photo_url, i.latitude, i.longitude,
+                i.location_name, i.status AS issue_status, i.assigned_department
+         FROM job_assignments ja
+         JOIN issues i ON i.id = ja.issue_id
+         WHERE ja.worker_id = $1 OR ja.worker_id IN (SELECT id FROM users WHERE email = 'worker@nagarseva.in')
+         ORDER BY ja.updated_at DESC LIMIT 1`,
+        [req.user.id]
+      );
+      job = rows[0];
+    }
+
+    let jobContext = {};
+    if (job) {
+      jobContext = {
+        job_id: job.id,
+        issue_title: job.title,
+        problem_description: job.description || job.title,
+        category: job.category,
+        location: job.location_name,
+        severity: job.severity,
+        current_step: current_step || job.steps_done || 1,
+        total_steps: job.step_plan?.steps?.length || 4,
+        step_plan_details: job.step_plan?.steps || [],
+        job_status: job.status
+      };
+    }
+
     const result = await voiceAgent(text, language, jobContext);
-    res.json({ transcription: text, ...result });
+    const audioBase64 = await synthesizeSpeech(result.guidance_text, language);
+    res.json({ transcription: text, audio_base64: audioBase64, ...result });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Voice agent failed' });
