@@ -82,8 +82,8 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Community Hero API running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Community Hero API running on port ${PORT}`);
   startEscalationCron();
   startWorkerCron();
 });
