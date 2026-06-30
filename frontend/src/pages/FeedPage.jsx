@@ -29,7 +29,8 @@ export default function FeedPage() {
 
   useEffect(() => {
     setLoading(true);
-    const params = new URLSearchParams({ lat: position.lat, lng: position.lng, radius: 2000 });
+    const params = new URLSearchParams({ lat: position.lat, lng: position.lng });
+    if (tab === 'near') params.set('filter', 'near');
     if (tab === 'verified') params.set('filter', 'verified');
     if (tab === 'my_reports') params.set('filter', 'my_reports');
     api.get(`/feed?${params}`)
@@ -40,7 +41,12 @@ export default function FeedPage() {
   return (
     <div className="max-w-lg mx-auto p-4 pb-6">
       <h1 className="text-2xl font-bold text-slate-800 mb-4">{t('hyperlocalFeed')}</h1>
-      <p className="text-sm text-slate-500 mb-4">{t('within2km')}</p>
+      <p className="text-sm text-slate-500 mb-4">
+        {tab === 'near' ? 'Showing closest community issues ordered by distance' :
+         tab === 'my_reports' ? 'Issues tracked by your account & demo reports' :
+         tab === 'verified' ? 'Community upvoted & AI verified civic issues' :
+         'All active civic issues across the community'}
+      </p>
 
       <div className="flex gap-2 mb-4 overflow-x-auto">
         {TABS.map(({ key, label }) => (
